@@ -1,9 +1,76 @@
-Zed: Z3-Python scripts to solve N-queens type puzzles on a Stratego board
-=========================================================================
+Z3-Python scripts to solve N-queens type puzzles on a Stratego board
+====================================================================
 
 [![License](https://img.shields.io/badge/license-Boost-blue.svg)](https://opensource.org/licenses/BSL-1.0)
 [![](https://tokei.rs/b1/github/rhalbersma/zed)](https://github.com/rhalbersma/zed)
 
+##### Bomb domination
+
+Placing as few bombs as possible on a 4x10 board such that all 1x6, 2x3 and 3x2 boxes have at least one bomb.
+Minimum number of bombs satisfying the constraints == 7.
+
+    . . . . B . . . . .
+    . . B . . B . . B .
+    . B . . . . . B . .
+    . . . . B . . . . .
+
+Placing as few bombs as possible on a 4x10 board such that all 2x3 and 3x2 boxes have at least one bomb.
+Minimum number of bombs satisfying the constraints == 6.
+
+    . . . . . . . . . .
+    . B . . B . . B . .
+    . . B . . B . . B .
+    . . . . . . . . . .
+
+##### Scout domination
+
+Placing as few scouts as possible on a 10x10 Stratego board such that they threaten every square.
+Minimum number of scouts satisfying constraints == 8.
+
+    . . . . . 2 . . . .
+    . . . . . . . . 2 .
+    2 . . . . . . . . .
+    . . . . 2 . . . . .
+    . . # # . . # # . .
+    . . # # . . # # . .
+    . . . . . . . . . 2
+    . 2 . . . . . . . .
+    . . . . . . . . . 2
+    . . . . . . . . . 2
+
+##### Scout independence
+
+Placing as many scouts as possible on a 10x10 Stratego board such that they don't threaten each other.
+Maximum number of scouts satisfying constraints == 14.
+
+    . . . 2 . . . . . .
+    . . 2 . . . . . . .
+    . . . . . . 2 . . .
+    . . . . . . . 2 . .
+    2 . # # 2 . # # 2 .
+    . 2 # # . 2 # # . 2
+    . . . . . . 2 . . .
+    . . . . . . . 2 . .
+    . . . 2 . . . . . .
+    . . 2 . . . . . . .
+
+##### Scout cover
+
+Maximum number of scout pairs on a 10x10 Stratego board such that scouts within pairs only threaten each other.
+Z3 found a solution for 9 scout pairs:
+
+    . . . 2 . . . 2 . .
+    . 2 . . . . 2 . . .
+    . . . . . . . . . 2
+    . . 2 . . 2 . . . .
+    . . # # 2 . # # 2 .
+    2 . # # 2 . # # 2 .
+    . . . . . . . . . 2
+    2 . . . . . . . . .
+    . . . . . . 2 2 . .
+    . . 2 2 . . . . . .
+
+Z3 failed to find a solution for 10 pairs.
 
 ##### Roadmap
 
