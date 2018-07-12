@@ -6,14 +6,6 @@ Z3-Python scripts to solve N-queens type puzzles on a Stratego board
 
 ##### Bomb domination
 
-Placing as few bombs as possible on a 4x10 board such that all 1x6, 2x3 and 3x2 boxes have at least one bomb.
-Minimum number of bombs satisfying the constraints == 7.
-
-    . . . . B . . . . .
-    . . B . . B . . B .
-    . B . . . . . B . .
-    . . . . B . . . . .
-
 Placing as few bombs as possible on a 4x10 board such that all 2x3 and 3x2 boxes have at least one bomb.
 Minimum number of bombs satisfying the constraints == 6.
 
@@ -21,6 +13,14 @@ Minimum number of bombs satisfying the constraints == 6.
     . B . . B . . B . .
     . . B . . B . . B .
     . . . . . . . . . .
+
+Placing as few bombs as possible on a 4x10 board such that all 1x6, 2x3 and 3x2 boxes have at least one bomb.
+Minimum number of bombs satisfying the constraints == 7.
+
+    . . . . B . . . . .
+    . . B . . B . . B .
+    . B . . . . . B . .
+    . . . . B . . . . .
 
 ##### Scout domination
 
@@ -77,7 +77,7 @@ Z3 failed to find a solution for 10 pairs.
 - [ ] Add proper unit testing
 - [ ] Add Travis CI badge
 - [ ] Add CodeCov badge
-- [ ] Experiment with the largely undocumented Z3 Pseudo-Boolean solvers
+- [x] Experiment with the largely undocumented Z3 Pseudo-Boolean solvers
 - [ ] Attempt to solve the [bomb/scout placement puzzle](http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=11671) posted by user [The Prof](http://forum.stratego.com/user/572-the-prof/)
 
 ##### Acknowledgments
