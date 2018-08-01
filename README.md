@@ -72,19 +72,19 @@ The maximum number of scouts satisfying the constraints == 18.
 
 ##### Scout independence in the presence of bombs
 
-The maximum number of scouts on a Stratego board such that no scout threatens another scout.   
-The maximum number of scouts satisfying the constraints == 14.   
+The maximum number of scouts on a Stratego board with at most 6 bombs in each setup area such that no scout threatens another scout.   
+The maximum number of scouts satisfying the constraints == 24.   
 
-    . . . . . . . 2 . .
-    . . . 2 . . . . . .
-    . . 2 . . . . . . .
-    . . . . . . 2 . . .
+    . . . . 2 B 2 . . .
+    . . . . . 2 B 2 . .
+    . . 2 . . B 2 B 2 .
+    . . . 2 B . . 2 B 2
+    . 2 # # . 2 # # . .
     2 . # # 2 . # # 2 .
-    . 2 # # . 2 # # . 2
-    . . . . . . 2 . . .
-    . . 2 . . . . . . .
-    . . . . . . . 2 . .
-    . . . 2 . . . . . .
+    B . 2 . B . . 2 . .
+    2 B . . 2 B 2 . . .
+    . 2 B 2 . . . . . .
+    . . 2 B . 2 . . . .
 
 ##### Roadmap
 
