@@ -50,9 +50,9 @@ assert len(lake_rows) == 6
 assert len(lake_cols) == 8
 assert len(segments) == 28
 
-# TODO: bug in line 55 (*weakening* the constraint from PbGe to PbLe will *lower* the maximum number of scouts from 14 to 13)
+# TODO: bug in line 55 (*weakening* the constraint from PbEq to PbLe will *lower* the maximum number of scouts from 14 to 13)
 at_most_one_scout_per_segment = [
-    PbGe([
+    PbEq([
         (is_scout[r][c], 1)
         for (r, c) in s
     ], 1)

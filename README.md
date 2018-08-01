@@ -43,16 +43,16 @@ The minimum number of scouts satisfying the constraints == 8.
 The maximum number of scouts on a Stratego board such that no scout threatens another scout.   
 The maximum number of scouts satisfying the constraints == 14.   
 
-    . . . . . . . 2 . .
+    . . . . . . 2 . . .
     . . . 2 . . . . . .
+    . . . . . . . 2 . .
+    . . 2 . . . . . . .
+    2 . # # 2 . # # . 2
+    . 2 # # . 2 # # 2 .
+    . . . 2 . . . . . .
+    . . . . . . . 2 . .
     . . 2 . . . . . . .
     . . . . . . 2 . . .
-    2 . # # 2 . # # 2 .
-    . 2 # # . 2 # # . 2
-    . . . . . . 2 . . .
-    . . 2 . . . . . . .
-    . . . . . . . 2 . .
-    . . . 2 . . . . . .
 
 ##### Scout cover
 
