@@ -28,7 +28,7 @@ def board(model):
 
 # https://en.wikipedia.org/wiki/Dominating_set
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=441845
-print("Placing as few scouts as possible on a %sx%s Stratego board such that they threaten every square." % (H, W))
+print("The minimum number of scouts on a Stratego board such that each square is occupied or threatened by a scout.   ")
 
 # Variables
 is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
@@ -36,9 +36,11 @@ is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).
 # Piece placement
 no_scouts_in_lakes = [ Not(is_scout[r][c]) for (r, c) in lakes() ]
 
-# Scout moves
+# Scout moves in the left (L), right (R), downward (D) and upward (U) directions
 def L_scout_moves_from(r, c):
-    if r in chain(range(0, 4), range(6, H)) or c in range(0, 2): 
+    if r in chain(range(0, 4), range(6, H)):
+        return range(0, c)
+    elif c in range(0, 2):
         return range(0, c)
     elif c in range(4, 6):
         return range(4, c)
@@ -48,17 +50,21 @@ def L_scout_moves_from(r, c):
         return range(0)
 
 def R_scout_moves_from(r, c):
-    if r in chain(range(0, 4), range(6, H)) or c in range(8, W):
+    if r in chain(range(0, 4), range(6, H)):
         return range(c + 1, W)
     elif c in range(0, 2):
         return range(c + 1, 2)
     elif c in range(4, 6):
         return range(c + 1, 6)
+    elif c in range(8, W):
+        return range(c + 1, W)
     else:
         return range(0)
 
 def D_scout_moves_from(r, c):
-    if c in chain(range(0, 2), range(4, 6), range(8, W)) or r in range(0, 4): 
+    if c in chain(range(0, 2), range(4, 6), range(8, W)):
+        return range(0, r)
+    elif r in range(0, 4):
         return range(0, r)
     elif r in range(6, H):
         return range(6, r)
@@ -66,31 +72,33 @@ def D_scout_moves_from(r, c):
         return range(0)
 
 def U_scout_moves_from(r, c):
-    if c in chain(range(0, 2), range(4, 6), range(8, W)) or r in range(6, H):
+    if c in chain(range(0, 2), range(4, 6), range(8, W)):
         return range(r + 1, H)
     elif r in range(0, 4):
         return range(r + 1, 4)
+    elif r in range(6, H):
+        return range(r + 1, H)
     else:
         return range(0)
 
 scout_moves_from = np.array([
-    chain(
+    list(chain(
         zip(repeat(r), L_scout_moves_from(r, c)),
-        zip(repeat(r), R_scout_moves_from(r, c)),    
+        zip(repeat(r), R_scout_moves_from(r, c)),
         zip(D_scout_moves_from(r, c), repeat(c)),
         zip(U_scout_moves_from(r, c), repeat(c))
-    )
+    ))
     for (r, c) in squares()
 ]).reshape(H, W)
 
 each_square_occupied_or_threatened_by_scout = [
     Or(
-        is_scout[r][c], 
+        is_scout[r][c],
         Or([
-            is_scout[dr][dc] 
+            is_scout[dr][dc]
             for (dr, dc) in scout_moves_from[r, c]
         ])
-    ) 
+    )
     for (r, c) in squares() if (r, c) not in lakes()
 ]
 
@@ -105,8 +113,7 @@ min_scouts = s.minimize(num_scouts)
 
 if s.check() == sat:
     assert s.lower(min_scouts) == 8
-    print("Minimum number of scouts satisfying constraints == %s." % s.lower(min_scouts))
+    print("The minimum number of scouts satisfying the constraints == %s.   " % s.lower(min_scouts))
     print(board(s.model()))
 else:
     print("Z3 failed to find a solution.")
-
