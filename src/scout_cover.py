@@ -5,150 +5,129 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-from itertools import chain
+from itertools import chain, product, repeat
 import numpy as np
 from z3 import *
 
-# Stratego board dimensions
+# Stratego board
 H, W =  10, 10
-scout = [ [ Bool("scout_%s%s" % (r, c)) for c in range(W) ] for r in range(H) ]
-num_scouts = Sum([ If(scout[r][c], 1, 0) for r in range(H) for c in range(W) ])
-num_scout_pairs = Int('k')
-lakes_are_forbidden = [ Not(scout[r][c]) for r in range(4, 6) for c in chain(range(2, 4), range(6, 8)) ]
+
+def squares():
+    return product(range(H), range(W))
+
+def lakes():
+    return product(range(4, 6), chain(range(2, 4), range(6, 8)))
+
+# Board display
+def piece(m, r, c):
+    return '#' if (r, c) in lakes() else '2' if m.evaluate(is_scout[r][c]) else '.'
+
+def board(model):
+    b = np.array([ piece(model, r, c) for (r, c) in squares() ]).reshape(H, W)
+    return "%s" % '\n'.join(map(lambda row: ' '.join(map(str, row)), b))
 
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=11670
+# http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=457225
+print("Placing as many scouts as possible on a %sx%s Stratego board such that they threaten exactly one other scout." % (H, W))
 
-# Cache the row and column sum into variables.
-num_scouts_per_open_row           = [ Sum([ If(scout[r][c], 1, 0) for c in range(W)    ]) for r in chain(range(0, 4), range(6, H)) ]
-num_scouts_per_row_in_left_lane   = [ Sum([ If(scout[r][c], 1, 0) for c in range(0, 2) ]) for r in range(4, 6) ]
-num_scouts_per_row_in_center_lane = [ Sum([ If(scout[r][c], 1, 0) for c in range(4, 6) ]) for r in range(4, 6) ]
-num_scouts_per_row_in_right_lane  = [ Sum([ If(scout[r][c], 1, 0) for c in range(8, W) ]) for r in range(4, 6) ]
-num_scouts_per_open_column        = [ Sum([ If(scout[r][c], 1, 0) for r in range(H)    ]) for c in chain(range(0, 2), range(4, 6), range(8, W)) ]
-num_scouts_per_column_below_lakes = [ Sum([ If(scout[r][c], 1, 0) for r in range(0, 4) ]) for c in chain(range(2, 4), range(6, 8)) ]
-num_scouts_per_column_above_lakes = [ Sum([ If(scout[r][c], 1, 0) for r in range(6, H) ]) for c in chain(range(2, 4), range(6, 8)) ]
+# Variables
+is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
 
-# At most one scout pair (i.e. two scouts) per row or column.
-at_most_two_per_open_row           = [ num_scouts_per_open_row[ir]           <= 2 for ir, _ in enumerate(chain(range(0, 4), range(6, H))) ]
-at_most_two_per_row_in_left_lane   = [ num_scouts_per_row_in_left_lane[ir]   <= 2 for ir, _ in enumerate(range(4, 6)) ]
-at_most_two_per_row_in_center_lane = [ num_scouts_per_row_in_center_lane[ir] <= 2 for ir, _ in enumerate(range(4, 6)) ]
-at_most_two_per_row_in_right_lane  = [ num_scouts_per_row_in_right_lane[ir]  <= 2 for ir, _ in enumerate(range(4, 6)) ]
-at_most_two_per_open_column        = [ num_scouts_per_open_column[ic]        <= 2 for ic, _ in enumerate(chain(range(0, 2), range(4, 6), range(8, W))) ]
-at_most_two_per_column_below_lakes = [ num_scouts_per_column_below_lakes[ic] <= 2 for ic, _ in enumerate(chain(range(2, 4), range(6, 8))) ]
-at_most_two_per_column_above_lakes = [ num_scouts_per_column_above_lakes[ic] <= 2 for ic, _ in enumerate(chain(range(2, 4), range(6, 8))) ]
+# Piece placement
+no_scouts_in_lakes = [ Not(is_scout[r][c]) for (r, c) in lakes() ]
 
-# For each square with a scout, there is another scout in either the same row or the same column.
-# We express these constraints in terms of the already computed row and column sums.
-# Or(And(x == 2, y == 1), And(x == 1, y == 2)) is about 4x faster than x + y == 3 (which has to rely on 0 <= x <= 2 and 0 <= y <= 2 for integer x, y).
+# Lines
+open_rows = [ zip(repeat(r), range(W)) for r in chain(range(0, 4), range(6, H)) ]
+open_cols = [ zip(range(H), repeat(c)) for c in chain(range(0, 2), range(4, 6), range(8, W)) ]
+lake_rows = [ zip(repeat(r), range(c, c + 2)) for r in range(4, 6) for c in (0, 4, 8) ]
+lake_cols = [ zip(range(r, r + 4), repeat(c)) for r in (0, 6) for c in chain(range(2, 4), range(6, 8)) ]
+lines = open_rows + open_cols + lake_rows + lake_cols
 
-open_rows_cols = [ 
-    Implies(
-        scout[r][c], 
-        Or(
-            And(num_scouts_per_open_row[ir] == 2, num_scouts_per_open_column[ic] == 1),
-            And(num_scouts_per_open_row[ir] == 1, num_scouts_per_open_column[ic] == 2)
-        )
-    ) 
-    for ir, r in enumerate(chain(range(0, 4), range(6, H)))
-    for ic, c in enumerate(chain(range(0, 2), range(4, 6), range(8, W)))
+max_two_per_line = [ 
+    PbLe([ 
+        (is_scout[r][c], 1) 
+        for (r, c) in line 
+    ], 2) 
+    for line in lines 
 ]
 
-below_lakes = [ 
-    Implies(
-        scout[r][c], 
-        Or(
-            And(num_scouts_per_open_row[ir + 0] == 2, num_scouts_per_column_below_lakes[ic] == 1),
-            And(num_scouts_per_open_row[ir + 0] == 1, num_scouts_per_column_below_lakes[ic] == 2)
-        ) 
-    ) 
-    for ir, r in enumerate(range(0, 4))
-    for ic, c in enumerate(chain(range(2, 4), range(6, 8)))
-]
-
-above_lakes = [ 
-    Implies(
-        scout[r][c], 
-        Or(
-            And(num_scouts_per_open_row[ir + 4] == 2, num_scouts_per_column_above_lakes[ic] == 1),
-            And(num_scouts_per_open_row[ir + 4] == 1, num_scouts_per_column_above_lakes[ic] == 2)
-        )
-    ) 
-    for ir, r in enumerate(range(6, H))
-    for ic, c in enumerate(chain(range(2, 4), range(6, 8)))
-]
-
-left_lane = [ 
-    Implies(
-        scout[r][c],
-        Or( 
-            And(num_scouts_per_row_in_left_lane[ir] == 2, num_scouts_per_open_column[ic + 0] == 1),
-            And(num_scouts_per_row_in_left_lane[ir] == 1, num_scouts_per_open_column[ic + 0] == 2)
-        )
-    ) 
-    for ir, r in enumerate(range(4, 6))
-    for ic, c in enumerate(range(0, 2))
-]
-
-center_lane = [ 
-    Implies(
-        scout[r][c],
-        Or( 
-            And(num_scouts_per_row_in_center_lane[ir] == 2, num_scouts_per_open_column[ic + 2] == 1),
-            And(num_scouts_per_row_in_center_lane[ir] == 1, num_scouts_per_open_column[ic + 2] == 2)
-        )
-    ) 
-    for ir, r in enumerate(range(4, 6))
-    for ic, c in enumerate(range(4, 6))
-]
-
-right_lane = [ 
-    Implies(
-        scout[r][c], 
-        Or(
-            And(num_scouts_per_row_in_right_lane[ir] == 2, num_scouts_per_open_column[ic + 4] == 1),
-            And(num_scouts_per_row_in_right_lane[ir] == 1, num_scouts_per_open_column[ic + 4] == 2)
-        )
-    ) 
-    for ir, r in enumerate(range(4, 6))
-    for ic, c in enumerate(range(8, W))
-]
-
-def search_solution(N):
-    problem = Solver()
-
-    problem.add(num_scouts == 2 * num_scout_pairs)
-    problem.add(lakes_are_forbidden)
-
-    # one constraints per row or column
-    problem.add(at_most_two_per_open_row)
-    problem.add(at_most_two_per_open_column)
-    problem.add(at_most_two_per_column_below_lakes)
-    problem.add(at_most_two_per_column_above_lakes)
-    problem.add(at_most_two_per_row_in_left_lane)
-    problem.add(at_most_two_per_row_in_center_lane)
-    problem.add(at_most_two_per_row_in_right_lane)
-
-    # one constraint per square occupied by a scout
-    problem.add(open_rows_cols)
-    problem.add(below_lakes)
-    problem.add(above_lakes)
-    problem.add(left_lane)
-    problem.add(center_lane)
-    problem.add(right_lane)
-
-    problem.add(num_scout_pairs == N)
-
-    if problem.check() == sat:
-        m = problem.model()
-        print("Z3 found a solution for %s scout pairs:" % m.evaluate(num_scout_pairs))
-        f = np.array([ [ '2' if m.evaluate(scout[r][c]) else ('#' if r in range(4, 6) and c in chain(range(2, 4), range(6, 8)) else '.') for c in range(W) ] for r in range(H) ]).reshape(H, W)
-        print('%s' % '\n'.join(map(lambda row: ' '.join(map(str, row)), f)))
+# Scout moves
+def L_scout_moves_from(r, c):
+    if r in chain(range(0, 4), range(6, H)) or c in range(0, 2): 
+        return range(0, c)
+    elif c in range(4, 6):
+        return range(4, c)
+    elif c in range(8, W):
+        return range(8, c)
     else:
-        print("Z3 failed to find a solution for %s scout pairs." % N)
+        return range(0)
 
-print("Maximum number of scout pairs on a %sx%s Stratego board such that scouts within pairs only threaten each other." % (H, W))
-# This problem is too large to be solved with Optimize().maximize(scout_pairs)
-# Instead, we search for a solution with 9 scout pairs, and disproof a solution with 10 scout pairs
-set_param(verbose = 1)
-search_solution(9)
-search_solution(10) # takes ~20 minutes
-   
+def R_scout_moves_from(r, c):
+    if r in chain(range(0, 4), range(6, H)) or c in range(8, W):
+        return range(c + 1, W)
+    elif c in range(0, 2):
+        return range(c + 1, 2)
+    elif c in range(4, 6):
+        return range(c + 1, 6)
+    else:
+        return range(0)
+
+def D_scout_moves_from(r, c):
+    if c in chain(range(0, 2), range(4, 6), range(8, W)) or r in range(0, 4): 
+        return range(0, r)
+    elif r in range(6, H):
+        return range(6, r)
+    else:
+        return range(0)
+
+def U_scout_moves_from(r, c):
+    if c in chain(range(0, 2), range(4, 6), range(8, W)) or r in range(6, H):
+        return range(r + 1, H)
+    elif r in range(0, 4):
+        return range(r + 1, 4)
+    else:
+        return range(0)
+
+scout_moves_from = np.array([
+    chain(
+        zip(repeat(r), L_scout_moves_from(r, c)),
+        zip(repeat(r), R_scout_moves_from(r, c)),    
+        zip(D_scout_moves_from(r, c), repeat(c)),
+        zip(U_scout_moves_from(r, c), repeat(c))
+    )
+    for (r, c) in squares()
+]).reshape(H, W)
+
+scouts_threaten_exactly_one_other_scout = [ 
+    Implies(
+        is_scout[r][c], 
+        PbEq([
+            (is_scout[dr][dc], 1)
+            for (dr, dc) in scout_moves_from[r, c]
+        ], 1)
+    ) 
+    for (r, c) in squares() if (r, c) not in lakes()
+]
+
+# Clauses
+s = Optimize()
+#s = Solver()
+s.add(no_scouts_in_lakes)
+s.add(max_two_per_line)
+s.add(scouts_threaten_exactly_one_other_scout)
+
+# Objective
+num_scouts = Sum([ If(is_scout[r][c], 1, 0) for (r, c) in squares() ])
+num_scout_pairs = Int('K')
+s.add(num_scouts == 2 * num_scout_pairs)
+max_scouts = s.maximize(num_scout_pairs)
+#num_scouts = PbEq([ (is_scout[r][c], 1) for (r, c) in squares() ], 20)
+#s.add(num_scouts)
+
+if s.check() == sat:
+    #assert s.upper(max_scouts) == 20
+    print("Maximum number of scouts satisfying constraints == %s." % s.upper(num_scout_pairs))
+    print(board(s.model()))
+else:
+    print("Z3 failed to find a solution.")
+

@@ -5,46 +5,125 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-from itertools import chain
+from itertools import chain, product, repeat
 import numpy as np
 from z3 import *
 
-# Stratego board dimensions
+# Stratego board
 H, W =  10, 10
-scout = [ [ Bool("scout_%s%s" % (r, c)) for c in range(W) ] for r in range(H) ]
-num_scouts = Sum([ If(scout[r][c], 1, 0) for r in range(H) for c in range(W) ])
-lakes_are_forbidden = [ Not(scout[r][c]) for r in range(4, 6) for c in chain(range(2, 4), range(6, 8)) ]
+
+def squares():
+    return product(range(H), range(W))
+
+def lakes():
+    return product(range(4, 6), chain(range(2, 4), range(6, 8)))
+
+# Board display
+def piece(m, r, c):
+    return '#' if (r, c) in lakes() else '2' if m.evaluate(is_scout[r][c]) else '.'
+
+def board(model):
+    b = np.array([ piece(model, r, c) for (r, c) in squares() ]).reshape(H, W)
+    return "%s" % '\n'.join(map(lambda row: ' '.join(map(str, row)), b))
 
 # https://en.wikipedia.org/wiki/Independent_set_(graph_theory)
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=11659
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=441750
-
-at_most_one_per_open_row           = [ PbLe([ (scout[r][c], 1) for c in range(W)    ], 1) for r in chain(range(0, 4), range(6, H)) ]
-at_most_one_per_row_in_left_lane   = [ PbLe([ (scout[r][c], 1) for c in range(0, 2) ], 1) for r in range(4, 6) ]
-at_most_one_per_row_in_center_lane = [ PbLe([ (scout[r][c], 1) for c in range(4, 6) ], 1) for r in range(4, 6) ]
-at_most_one_per_row_in_right_lane  = [ PbLe([ (scout[r][c], 1) for c in range(8, W) ], 1) for r in range(4, 6) ]
-
-at_most_one_per_open_column        = [ PbLe([ (scout[r][c], 1) for r in range(H)    ], 1) for c in chain(range(0, 2), range(4, 6), range(8, W)) ]
-at_most_one_per_column_below_lakes = [ PbLe([ (scout[r][c], 1) for r in range(0, 4) ], 1) for c in chain(range(2, 4), range(6, 8)) ]
-at_most_one_per_column_above_lakes = [ PbLe([ (scout[r][c], 1) for r in range(6, H) ], 1) for c in chain(range(2, 4), range(6, 8)) ]
-
-problem = Optimize()
-problem.add(lakes_are_forbidden)
-problem.add(at_most_one_per_open_row)
-problem.add(at_most_one_per_row_in_left_lane)
-problem.add(at_most_one_per_row_in_center_lane)
-problem.add(at_most_one_per_row_in_right_lane)
-problem.add(at_most_one_per_open_column)
-problem.add(at_most_one_per_column_below_lakes)
-problem.add(at_most_one_per_column_above_lakes)
-obj = problem.maximize(num_scouts)
-
 print("Placing as many scouts as possible on a %sx%s Stratego board such that they don't threaten each other." % (H, W))
-if problem.check() == sat:
-    print("Maximum number of scouts satisfying constraints == %s." % problem.upper(obj)) # 14
-    m = problem.model()
-    f = np.array([ [ '2' if m.evaluate(scout[r][c]) else ('#' if r in range(4, 6) and c in chain(range(2, 4), range(6, 8)) else '.') for c in range(W) ] for r in range(H) ]).reshape(H, W)
-    print('%s' % '\n'.join(map(lambda row: ' '.join(map(str, row)), f)))
+
+# Variables
+is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
+
+# Piece placement
+no_scouts_in_lakes = [ Not(is_scout[r][c]) for (r, c) in lakes() ]
+
+# Lines
+open_rows = [ zip(repeat(r), range(W)) for r in chain(range(0, 4), range(6, H)) ]
+open_cols = [ zip(range(H), repeat(c)) for c in chain(range(0, 2), range(4, 6), range(8, W)) ]
+lake_rows = [ zip(repeat(r), range(c, c + 2)) for r in range(4, 6) for c in (0, 4, 8) ]
+lake_cols = [ zip(range(r, r + 4), repeat(c)) for r in (0, 6) for c in chain(range(2, 4), range(6, 8)) ]
+lines = open_rows + open_cols + lake_rows + lake_cols
+
+at_most_one_per_line = [ 
+    PbEq([ 
+        (is_scout[r][c], 1) 
+        for (r, c) in line 
+    ], 1) 
+    for line in lines 
+]
+
+# Scout moves
+def L_scout_moves_from(r, c):
+    if r in chain(range(0, 4), range(6, H)) or c in range(0, 2): 
+        return range(0, c)
+    elif c in range(4, 6):
+        return range(4, c)
+    elif c in range(8, W):
+        return range(8, c)
+    else:
+        return range(0)
+
+def R_scout_moves_from(r, c):
+    if r in chain(range(0, 4), range(6, H)) or c in range(8, W):
+        return range(c + 1, W)
+    elif c in range(0, 2):
+        return range(c + 1, 2)
+    elif c in range(4, 6):
+        return range(c + 1, 6)
+    else:
+        return range(0)
+
+def D_scout_moves_from(r, c):
+    if c in chain(range(0, 2), range(4, 6), range(8, W)) or r in range(0, 4): 
+        return range(0, r)
+    elif r in range(6, H):
+        return range(6, r)
+    else:
+        return range(0)
+
+def U_scout_moves_from(r, c):
+    if c in chain(range(0, 2), range(4, 6), range(8, W)) or r in range(6, H):
+        return range(r + 1, H)
+    elif r in range(0, 4):
+        return range(r + 1, 4)
+    else:
+        return range(0)
+
+scout_moves_from = np.array([
+    chain(
+        zip(repeat(r), L_scout_moves_from(r, c)),
+        zip(repeat(r), R_scout_moves_from(r, c)),    
+        zip(D_scout_moves_from(r, c), repeat(c)),
+        zip(U_scout_moves_from(r, c), repeat(c))
+    )
+    for (r, c) in squares()
+]).reshape(H, W)
+
+no_mutual_scout_threats = [ 
+    Implies(
+        is_scout[r][c], 
+        And([
+            Not(is_scout[dr][dc])
+            for (dr, dc) in scout_moves_from[r, c]
+        ])
+    )
+    for (r, c) in squares() if (r, c) not in lakes()
+]
+
+# Clauses
+s = Optimize()
+s.add(no_scouts_in_lakes)
+s.add(at_most_one_per_line)
+s.add(no_mutual_scout_threats)
+
+# Objective
+num_scouts = Sum([ If(is_scout[r][c], 1, 0) for (r, c) in squares() ])
+max_scouts = s.maximize(num_scouts)
+
+if s.check() == sat:
+    #assert s.upper(max_scouts) == 14
+    print("Maximum number of scouts satisfying constraints == %s." % s.upper(max_scouts))
+    print(board(s.model()))
 else:
     print("Z3 failed to find a solution.")
-   
+
