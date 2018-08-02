@@ -7,7 +7,7 @@
 
 from itertools import chain, product, repeat
 import numpy as np
-from z3 import *
+from z3 import And, Bool, If, Implies, Not, PbEq, PbLe, Optimize, sat, Sum
 
 # Stratego board
 H, W =  10, 10

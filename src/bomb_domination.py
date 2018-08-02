@@ -7,7 +7,7 @@
 
 from itertools import product
 import numpy as np
-from z3 import *
+from z3 import Bool, If, Optimize, PbGe, Sum, sat
 
 # Stratego setup area
 H, W =  4, 10
