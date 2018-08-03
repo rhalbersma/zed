@@ -37,7 +37,7 @@ def board(model):
 
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=11671
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=458177
-print("The maximum number of scouts on a Stratego board with at most 6 bombs in each setup area such that no scout threatens another scout.   ")
+print("The maximum number of scouts on a Stratego board with at most 6 bombs in each setup area such that no scout threatens another scout.")
 
 # Variables
 is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()

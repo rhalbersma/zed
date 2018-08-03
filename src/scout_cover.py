@@ -28,7 +28,7 @@ def board(model):
 
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=11670
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=457225
-print("The maximum number of scouts on a Stratego board such that each scout threatens exactly one other scout.   ")
+print("The maximum number of scouts on a Stratego board such that each scout threatens exactly one other scout.")
 
 # Variables
 is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
@@ -135,7 +135,7 @@ num_scouts = PbEq([ (is_scout[r][c], 1) for (r, c) in squares() ], max_scouts)
 s.add(num_scouts)
 
 if s.check() == sat:
-    print("The maximum number of scouts satisfying the constraints == %s.   " % max_scouts)
+    print("The maximum number of scouts satisfying the constraints == %s." % max_scouts)
     print(board(s.model()))
 else:
     print("Z3 failed to find a solution.")

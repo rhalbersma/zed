@@ -57,6 +57,7 @@ else:
     print("Z3 failed to find a solution.")
 
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=11661
+# http://forum.stratego.com/topic/1146-stratego-quizz-and-training-forum-answers/?p=11813
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=441745
 print("The minimum number of bombs on a Stratego setup area such that each 2x3, 3x2 and 1x6 rectangle has at least one bomb.   ")
 

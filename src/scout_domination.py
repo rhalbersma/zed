@@ -28,7 +28,7 @@ def board(model):
 
 # https://en.wikipedia.org/wiki/Dominating_set
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=441845
-print("The minimum number of scouts on a Stratego board such that each square is occupied or threatened by a scout.   ")
+print("The minimum number of scouts on a Stratego board such that each square is occupied or threatened by a scout.")
 
 # Variables
 is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
@@ -113,7 +113,7 @@ min_scouts = s.minimize(num_scouts)
 
 if s.check() == sat:
     assert s.lower(min_scouts) == 8
-    print("The minimum number of scouts satisfying the constraints == %s.   " % s.lower(min_scouts))
+    print("The minimum number of scouts satisfying the constraints == %s." % s.lower(min_scouts))
     print(board(s.model()))
 else:
     print("Z3 failed to find a solution.")
