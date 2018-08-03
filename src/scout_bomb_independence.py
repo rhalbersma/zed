@@ -5,9 +5,9 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-from itertools import chain, product
+from itertools import chain, product, repeat
 import numpy as np
-from z3 import And, Bool, Implies, Not, Or, PbEq, PbLe, sat, Solver
+from z3 import And, Bool, If, Implies, Not, Or, PbEq, PbLe, sat, Solver, Sum
 
 # Stratego board
 H, W =  10, 10
@@ -49,6 +49,27 @@ no_scouts_or_bombs_in_lakes = [ Not(Or(is_scout[r][c], is_bomb[r][c])) for (r, c
 no_bombs_in_dmz = [ Not(is_bomb[r][c]) for (r, c) in dmz() ]
 at_most_six_bombs_in_red_setup = PbLe([ (is_bomb[r][c], 1) for (r, c) in red_setup() ], 6)
 at_most_six_bombs_in_blu_setup = PbLe([ (is_bomb[r][c], 1) for (r, c) in blu_setup() ], 6)
+
+# Segments
+open_rows = [ list(zip(repeat(r), range(W))) for r in chain(range(0, 4), range(6, H)) ]
+open_cols = [ list(zip(range(H), repeat(c))) for c in chain(range(0, 2), range(4, 6), range(8, W)) ]
+lake_rows = [ list(zip(repeat(r), range(c, c + 2))) for r in range(4, 6) for c in (0, 4, 8) ]
+lake_cols = [ list(zip(range(r, r + 4), repeat(c))) for r in (0, 6) for c in chain(range(2, 4), range(6, 8)) ]
+segments = open_rows + open_cols + lake_rows + lake_cols
+
+assert len(open_rows) == 8
+assert len(open_cols) == 6
+assert len(lake_rows) == 6
+assert len(lake_cols) == 8
+assert len(segments) == 28
+
+scout_sum_segment = [ Sum([ If(is_scout[r][c], 1, 0) for (r, c) in s ]) for s in segments  ]
+bomb_sum_segment = [ Sum([ If(is_bomb[r][c], 1, 0) for (r, c) in s ]) for s in segments  ]
+
+at_most_one_more_scout_than_bombs_per_segment = [
+    scout_sum_segment[i] <= bomb_sum_segment[i] + 1
+    for i, _ in enumerate(segments)
+]
 
 # Scout moves in the left (L), right (R), downward (D) and upward (U) directions
 def L_scout_moves_from(r, c):
@@ -172,12 +193,13 @@ s = Solver()
 s.add(no_scouts_and_bombs_on_same_square)
 s.add(no_scouts_or_bombs_in_lakes)
 s.add(no_bombs_in_dmz)
+s.add(at_most_one_more_scout_than_bombs_per_segment)
 s.add(no_scout_threatens_another_scout)
 s.add(at_most_six_bombs_in_red_setup)
 s.add(at_most_six_bombs_in_blu_setup)
 
 # Objective
-max_scouts = 22
+max_scouts = 24
 num_scouts = PbEq([ (is_scout[r][c], 1) for (r, c) in squares() ], max_scouts)
 s.add(num_scouts)
 
