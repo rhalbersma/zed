@@ -12,7 +12,7 @@ from z3 import Bool, Implies, Not, PbEq, PbLe, sat, Solver
 # Stratego board
 H, W =  10, 10
 
-def squares():
+def board():
     return product(range(H), range(W))
 
 def lakes():
@@ -22,8 +22,8 @@ def lakes():
 def piece(m, r, c):
     return '#' if (r, c) in lakes() else '2' if m.evaluate(is_scout[r][c]) else '.'
 
-def board(model):
-    b = np.array([ piece(model, r, c) for (r, c) in squares() ]).reshape(H, W)
+def diagram(model):
+    b = np.array([ piece(model, r, c) for (r, c) in board() ]).reshape(H, W)
     return "%s" % '\n'.join(map(lambda row: ' '.join(map(str, row)), b))
 
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=11670
@@ -31,7 +31,7 @@ def board(model):
 print("The maximum number of scouts on a Stratego board such that each scout threatens exactly one other scout.")
 
 # Variables
-is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
+is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in board() ]).reshape(H, W).tolist()
 
 # Piece placement
 no_scouts_in_lakes = [ Not(is_scout[r][c]) for (r, c) in lakes() ]
@@ -42,12 +42,6 @@ open_cols = [ list(zip(range(H), repeat(c))) for c in chain(range(0, 2), range(4
 lake_rows = [ list(zip(repeat(r), range(c, c + 2))) for r in range(4, 6) for c in (0, 4, 8) ]
 lake_cols = [ list(zip(range(r, r + 4), repeat(c))) for r in (0, 6) for c in chain(range(2, 4), range(6, 8)) ]
 segments = open_rows + open_cols + lake_rows + lake_cols
-
-assert len(open_rows) == 8
-assert len(open_cols) == 6
-assert len(lake_rows) == 6
-assert len(lake_cols) == 8
-assert len(segments) == 28
 
 at_most_two_scouts_per_segment = [
     PbLe([
@@ -109,7 +103,7 @@ scout_moves_from = np.array([
         zip(D_scout_moves_from(r, c), repeat(c)),
         zip(U_scout_moves_from(r, c), repeat(c))
     ))
-    for (r, c) in squares()
+    for (r, c) in board()
 ]).reshape(H, W)
 
 scouts_threaten_exactly_one_other_scout = [
@@ -120,7 +114,7 @@ scouts_threaten_exactly_one_other_scout = [
             for (dr, dc) in scout_moves_from[r, c]
         ], 1)
     )
-    for (r, c) in squares() if (r, c) not in lakes()
+    for (r, c) in board() if (r, c) not in lakes()
 ]
 
 # Clauses (Optimize() takes too long on this problem, Solver() will proof max_scouts = 18 instantly, and disproof max_scouts = 20 within a minute)
@@ -130,12 +124,12 @@ s.add(at_most_two_scouts_per_segment)
 s.add(scouts_threaten_exactly_one_other_scout)
 
 # Objective
-max_scouts = 18
-num_scouts = PbEq([ (is_scout[r][c], 1) for (r, c) in squares() ], max_scouts)
+max_scouts = 20
+num_scouts = PbEq([ (is_scout[r][c], 1) for (r, c) in board() ], max_scouts)
 s.add(num_scouts)
 
 if s.check() == sat:
     print("The maximum number of scouts satisfying the constraints == %s." % max_scouts)
-    print(board(s.model()))
+    print(diagram(s.model()))
 else:
     print("Z3 failed to find a solution.")

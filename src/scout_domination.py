@@ -12,7 +12,7 @@ from z3 import Bool, If, Not, Or, Optimize, sat, Sum
 # Stratego board
 H, W =  10, 10
 
-def squares():
+def board():
     return product(range(H), range(W))
 
 def lakes():
@@ -22,8 +22,8 @@ def lakes():
 def piece(m, r, c):
     return '#' if (r, c) in lakes() else '2' if m.evaluate(is_scout[r][c]) else '.'
 
-def board(model):
-    b = np.array([ piece(model, r, c) for (r, c) in squares() ]).reshape(H, W)
+def diagram(model):
+    b = np.array([ piece(model, r, c) for (r, c) in board() ]).reshape(H, W)
     return "%s" % '\n'.join(map(lambda row: ' '.join(map(str, row)), b))
 
 # https://en.wikipedia.org/wiki/Dominating_set
@@ -31,7 +31,7 @@ def board(model):
 print("The minimum number of scouts on a Stratego board such that each square is occupied or threatened by a scout.")
 
 # Variables
-is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
+is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in board() ]).reshape(H, W).tolist()
 
 # Piece placement
 no_scouts_in_lakes = [ Not(is_scout[r][c]) for (r, c) in lakes() ]
@@ -88,7 +88,7 @@ scout_moves_from = np.array([
         zip(D_scout_moves_from(r, c), repeat(c)),
         zip(U_scout_moves_from(r, c), repeat(c))
     ))
-    for (r, c) in squares()
+    for (r, c) in board()
 ]).reshape(H, W)
 
 each_square_occupied_or_threatened_by_scout = [
@@ -99,7 +99,7 @@ each_square_occupied_or_threatened_by_scout = [
             for (dr, dc) in scout_moves_from[r, c]
         ])
     )
-    for (r, c) in squares() if (r, c) not in lakes()
+    for (r, c) in board() if (r, c) not in lakes()
 ]
 
 # Clauses
@@ -108,12 +108,12 @@ s.add(no_scouts_in_lakes)
 s.add(each_square_occupied_or_threatened_by_scout)
 
 # Objective
-num_scouts = Sum([ If(is_scout[r][c], 1, 0) for (r, c) in squares() ])
+num_scouts = Sum([ If(is_scout[r][c], 1, 0) for (r, c) in board() ])
 min_scouts = s.minimize(num_scouts)
 
 if s.check() == sat:
     assert s.lower(min_scouts) == 8
     print("The minimum number of scouts satisfying the constraints == %s." % s.lower(min_scouts))
-    print(board(s.model()))
+    print(diagram(s.model()))
 else:
     print("Z3 failed to find a solution.")

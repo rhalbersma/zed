@@ -12,7 +12,7 @@ from z3 import And, Bool, If, Implies, Not, Or, PbEq, PbLe, sat, Solver, Sum
 # Stratego board
 H, W =  10, 10
 
-def squares():
+def board():
     return product(range(H), range(W))
 
 def lakes():
@@ -31,8 +31,8 @@ def blu_setup():
 def piece(m, r, c):
     return '#' if (r, c) in lakes() else '2' if m.evaluate(is_scout[r][c]) else 'B' if m.evaluate(is_bomb[r][c]) else '.'
 
-def board(model):
-    b = np.array([ piece(model, r, c) for (r, c) in squares() ]).reshape(H, W)
+def diagram(model):
+    b = np.array([ piece(model, r, c) for (r, c) in board() ]).reshape(H, W)
     return "%s" % '\n'.join(map(lambda row: ' '.join(map(str, row)), b))
 
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=11671
@@ -40,11 +40,11 @@ def board(model):
 print("The maximum number of scouts on a Stratego board with at most 6 bombs in each setup area such that no scout threatens another scout.")
 
 # Variables
-is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
-is_bomb  = np.array([ Bool("is_bomb_%s%s"  % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
+is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in board() ]).reshape(H, W).tolist()
+is_bomb  = np.array([ Bool("is_bomb_%s%s"  % (r, c)) for (r, c) in board() ]).reshape(H, W).tolist()
 
 # Piece placement
-no_scouts_and_bombs_on_same_square = [ Not(And(is_scout[r][c], is_bomb[r][c])) for (r, c) in squares() ]
+no_scouts_and_bombs_on_same_square = [ Not(And(is_scout[r][c], is_bomb[r][c])) for (r, c) in board() ]
 no_scouts_or_bombs_in_lakes = [ Not(Or(is_scout[r][c], is_bomb[r][c])) for (r, c) in lakes() ] 
 no_bombs_in_dmz = [ Not(is_bomb[r][c]) for (r, c) in dmz() ]
 at_most_six_bombs_in_red_setup = PbLe([ (is_bomb[r][c], 1) for (r, c) in red_setup() ], 6)
@@ -118,22 +118,22 @@ def U_scout_moves_from(r, c):
 
 L_scout_moves_cols = np.array([
     L_scout_moves_from(r, c)
-    for (r, c) in squares()
+    for (r, c) in board()
 ]).reshape(H, W)
 
 R_scout_moves_cols = np.array([
     R_scout_moves_from(r, c)
-    for (r, c) in squares()
+    for (r, c) in board()
 ]).reshape(H, W)
 
 D_scout_moves_rows = np.array([
     D_scout_moves_from(r, c)
-    for (r, c) in squares()
+    for (r, c) in board()
 ]).reshape(H, W)
 
 U_scout_moves_rows = np.array([
     U_scout_moves_from(r, c)
-    for (r, c) in squares()
+    for (r, c) in board()
 ]).reshape(H, W)
 
 def squares_in_between(b, e):
@@ -185,7 +185,7 @@ no_scout_threatens_another_scout = [
             ]
         )
     ) 
-    for (r, c) in squares() if (r, c) not in lakes()
+    for (r, c) in board() if (r, c) not in lakes()
 ]
 
 # Clauses
@@ -200,11 +200,11 @@ s.add(at_most_six_bombs_in_blu_setup)
 
 # Objective
 max_scouts = 24
-num_scouts = PbEq([ (is_scout[r][c], 1) for (r, c) in squares() ], max_scouts)
+num_scouts = PbEq([ (is_scout[r][c], 1) for (r, c) in board() ], max_scouts)
 s.add(num_scouts)
 
 if s.check() == sat:
     print("Maximum number of scouts satisfying constraints == %s." % max_scouts)
-    print(board(s.model()))
+    print(diagram(s.model()))
 else:
     print("Z3 failed to find a solution.")

@@ -12,7 +12,7 @@ from z3 import And, Bool, If, Implies, Not, PbEq, PbLe, Optimize, sat, Sum
 # Stratego board
 H, W =  10, 10
 
-def squares():
+def board():
     return product(range(H), range(W))
 
 def lakes():
@@ -22,17 +22,18 @@ def lakes():
 def piece(m, r, c):
     return '#' if (r, c) in lakes() else '2' if m.evaluate(is_scout[r][c]) else '.'
 
-def board(model):
-    b = np.array([ piece(model, r, c) for (r, c) in squares() ]).reshape(H, W)
+def diagram(model):
+    b = np.array([ piece(model, r, c) for (r, c) in board() ]).reshape(H, W)
     return "%s" % '\n'.join(map(lambda row: ' '.join(map(str, row)), b))
 
 # https://en.wikipedia.org/wiki/Independent_set_(graph_theory)
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=11659
+# http://forum.stratego.com/topic/1146-stratego-quizz-and-training-forum-answers/?p=11812
 # http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=441750
-print("The maximum number of scouts on a Stratego board such that no scout threatens another scout.   ")
+print("The maximum number of scouts on a Stratego board such that no scout threatens another scout.")
 
 # Variables
-is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in squares() ]).reshape(H, W).tolist()
+is_scout = np.array([ Bool("is_scout_%s%s" % (r, c)) for (r, c) in board() ]).reshape(H, W).tolist()
 
 # Piece placement
 no_scouts_in_lakes = [ Not(is_scout[r][c]) for (r, c) in lakes() ]
@@ -44,13 +45,7 @@ lake_rows = [ list(zip(repeat(r), range(c, c + 2))) for r in range(4, 6) for c i
 lake_cols = [ list(zip(range(r, r + 4), repeat(c))) for r in (0, 6) for c in chain(range(2, 4), range(6, 8)) ]
 segments = open_rows + open_cols + lake_rows + lake_cols
 
-assert len(open_rows) == 8
-assert len(open_cols) == 6
-assert len(lake_rows) == 6
-assert len(lake_cols) == 8
-assert len(segments) == 28
-
-# TODO: bug in line 55 (*weakening* the constraint from PbEq to PbLe will *lower* the maximum number of scouts from 14 to 13)
+# TODO: incorporate the fixed issue https://github.com/Z3Prover/z3/issues/1782 as soon as there is a new release available
 at_most_one_scout_per_segment = [
     PbEq([
         (is_scout[r][c], 1)
@@ -111,7 +106,7 @@ scout_moves_from = np.array([
         zip(D_scout_moves_from(r, c), repeat(c)),
         zip(U_scout_moves_from(r, c), repeat(c))
     ))
-    for (r, c) in squares()
+    for (r, c) in board()
 ]).reshape(H, W)
 
 no_scout_threatens_another_scout = [
@@ -122,7 +117,7 @@ no_scout_threatens_another_scout = [
             for (dr, dc) in scout_moves_from[r, c]
         ])
     )
-    for (r, c) in squares() if (r, c) not in lakes()
+    for (r, c) in board() if (r, c) not in lakes()
 ]
 
 # Clauses
@@ -132,12 +127,12 @@ s.add(at_most_one_scout_per_segment)
 s.add(no_scout_threatens_another_scout)
 
 # Objective
-num_scouts = Sum([ If(is_scout[r][c], 1, 0) for (r, c) in squares() ])
+num_scouts = Sum([ If(is_scout[r][c], 1, 0) for (r, c) in board() ])
 max_scouts = s.maximize(num_scouts)
 
 if s.check() == sat:
     #assert s.upper(max_scouts) == 14
-    print("The maximum number of scouts satisfying the constraints == %s.   " % s.upper(max_scouts))
-    print(board(s.model()))
+    print("The maximum number of scouts satisfying the constraints == %s." % s.upper(max_scouts))
+    print(diagram(s.model()))
 else:
     print("Z3 failed to find a solution.")
