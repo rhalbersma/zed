@@ -1,6 +1,8 @@
 Z3-Python scripts to solve N-queens type puzzles on a Stratego board
 ====================================================================
 
+[![Language](https://img.shields.io/badge/language-Python-blue.svg)](https://www.python.org/)
+[![Standard](https://img.shields.io/badge/Python-3.6-blue.svg)](https://en.wikipedia.org/wiki/History_of_Python)
 [![License](https://img.shields.io/badge/license-Boost-blue.svg)](https://opensource.org/licenses/BSL-1.0)
 [![](https://tokei.rs/b1/github/rhalbersma/zed)](https://github.com/rhalbersma/zed)
 
