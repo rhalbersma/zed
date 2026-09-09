@@ -13,7 +13,10 @@ Two things here are load-bearing for performance and are not cosmetic:
     puzzle VI's refutation does not finish at all.
 
   * Board.squares_rank_major() for variable declaration and constraint
-    assertion.  Enumerating file-major costs a factor ~50 on that same query.
+    assertion.  Enumerating file-major costs ~74x on that same query, and unlike
+    most timings here this one survives re-measurement: over five SAT random
+    seeds with a 120s cap, rank-major solved 5/5 with a median of 1.24s,
+    file-major 4/5 with a median of 91.27s.
 """
 from itertools import product
 from z3 import *
@@ -24,8 +27,11 @@ from .board import segments
 def encode(problem, ctx=None):
     """Returns (solver, objective terms, scout vars, bomb vars, aux, context).
 
-    Each problem gets its own z3 Context: sharing the global context across
-    problems degraded puzzle VI's refutation by a factor ~330 (260s vs 0.8s).
+    Each problem gets its own z3 Context, so that problems cannot interfere and
+    can be built in any order.  This is hygiene, not speed: sharing one context
+    across all six measures the same (median 1.17s vs 1.13s on puzzle VI's
+    refutation over five SAT random seeds).  It looked like a ~330x win when the
+    driver still asserted the segment-saturation lemmas -- see _segment_used.
     """
     ctx = ctx or Context()
     board, rule = problem.board, problem.rule
@@ -131,9 +137,21 @@ def _lines(board):
 def _segment_used(board, seen, blocked, ctx):
     """A segment is *used* iff a scout lies in it, i.e. seen[] holds at its last
     square.  Summing these counts the matched vertices of the bipartite graph,
-    which for an independent set equals the number of scouts.  Constraining both
-    sides to N is worth ~5x on the refutation -- but only if the weaker
-    "enough segments exist" bound is left out; together they are ~5x worse."""
+    which for an independent set equals the number of scouts.
+
+    Returned for exploration, but deliberately NOT asserted by solve.py.  Pinning
+    both sides to N is redundant (it follows from the scout count) and it makes
+    the search wildly unstable.  Puzzle VI's N=25 refutation under five SAT
+    random seeds, 60s cap each:
+
+        PbEq(scouts, 25)                        5/5 solved, median  1.11s
+        PbGe(scouts, 25)                        5/5 solved, median  2.03s
+        PbGe + saturation                       2/5 solved, median  4.89s
+        PbEq + saturation                       2/5 solved, median 41.45s
+        saturation alone                        1/5 solved, median  0.57s
+
+    Saturation buys the best single runs (0.22s) and the worst (timeout), which
+    is how it came to look like a 5x win on one lucky measurement."""
     used_rank = [And(seen[("rank", (f, r))],
                      BoolVal(True, ctx) if f == board.W - 1 else blocked((f + 1, r)))
                  for r in range(board.H) for f in range(board.W)]

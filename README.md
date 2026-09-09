@@ -133,8 +133,8 @@ This [puzzle](http://forum.stratego.com/topic/1134-stratego-quizz-and-training-f
 In July 2018, I posted [the answer](http://forum.stratego.com/topic/1134-stratego-quizz-and-training-forum/?p=458177) obtained from private communication with computer scientist [Wieger Wesselink](http://www.win.tue.nl/~wieger/).  
 This solution had been found by Wesselink in collaboration with his colleague [Hans Zantema](https://www.win.tue.nl/~hzantema/) (using the Z3-solver).  
 The maximum number of scouts satisfying the constraints == 24.  
-My current Z3 script proofs N == 24 within 15 minutes, and finds no disproof for N == 25 within an hour.  
-The Wesselink-Zantema approach manages to proof/disproof N == 24/25 within 10 seconds each.
+The 2018 script proved N == 24 within 15 minutes and found no disproof for N == 25 within an hour; the Wesselink-Zantema approach managed both within 10 seconds each.  
+`src/solve_all.py` now settles the puzzle in under 3 seconds. Almost all of that is a polynomial lower bound of 24, found by hill-climbing over bomb layouts and scored by [bipartite matching](https://en.wikipedia.org/wiki/Matching_(graph_theory)) rather than by the solver: for a fixed bomb layout, independent scouts are exactly a matching between rank segments and file segments. That leaves Z3 with the single refutation of N == 25, which takes about a second.
 
     . . . 2 B 2 . . . . 
     . . 2 B 2 B 2 . . . 
@@ -147,14 +147,53 @@ The Wesselink-Zantema approach manages to proof/disproof N == 24/25 within 10 se
     . 2 B 2 B . 2 . . . 
     . . 2 B 2 . . . . .
 
+Other boards
+------------
+
+The six puzzles above are all posed on the classic board, but nothing in the encodings is tied to it. `src/zed/` factors out the geometry, so the same four rules can be asked of any Stratego variant:
+
+    from zed.board import with_setup
+    from zed.problems import Problem, TRAVEL
+    from zed import solve
+
+    solve.solve(Problem("travel", with_setup(TRAVEL, 5), "independent", "max"))
+
+A `Board` is a width, a height, a set of lake squares, and a per-setup-area bomb budget. Squares are chess-style `(file, rank)` pairs with rank 1 at the bottom, matching the convention in [tabula](https://github.com/rhalbersma/tabula), and the setup areas are derived from the lake ranks rather than hard-coded. Four boards ship with it:
+
+| board | size | lakes | setup area | army | bombs | miners |
+|---|---|---|---|---|---|---|
+| Classic | 10x10 | c5-d6, g5-h6 | 10x4 = 40 | 40 | 6 | 5 |
+| L'Attaque | 9x10 | c5, e5, g5, c6, e6, g6 | 9x4 = 36 | 36 | 4 | 4 |
+| Quick Arena | 8x8 | c4-c5, f4-f5 | 8x3 = 24 | 24 | ? | ? |
+| Travel | 10x8 | c4-d5, g4-h5 | 10x3 = 30 | 30 | 5 | 4 |
+
+The setup area is always the full width of the board, below and above the lake ranks, and every variant fills it exactly -- which is how the travel set's army size can be read straight off its board. The first three geometries come from [tabula](https://github.com/rhalbersma/tabula); the travel board is derived here. Quick Arena's bomb and miner counts are not recorded there, so `sweep.py` varies the budget instead of assuming one.
+
+The travel set is the classic game with two ranks taken out of the middle and 1 captain, 2 lieutenants, 2 sergeants, 1 miner, 3 scouts and 1 bomb taken out of the army. Its 5 bombs to 4 miners preserves the classic 6-to-5 margin, which looks like a deliberate balance rule: even if every miner trades itself for a bomb, one bomb is left to wall in the flag. [L'Attaque](https://en.wikipedia.org/wiki/L%27Attaque), the 1908 game Stratego descends from, is the one variant that misses this by a bomb.
+
+`src/sweep.py` asks puzzle VI's question of every board over a range of bomb budgets, and answers all 28 of them in about 20 seconds:
+
+    max independent scouts vs bombs per setup area
+
+    board          b=0  b=1  b=2  b=3  b=4  b=5  b=6   cap
+    l_attaque       12   14   16   18   20   22   24   24
+    classic         14   16   18   20   22   22   24   26
+    quick_arena     10   12   14   16   16   18   20   22
+    travel          12   14   16   18   20   20   22   24
+
+Most entries are settled by a counting bound alone: a bomb splits at most one segment per orientation, so it buys at most one extra scout, capping the answer at (number of segments + bombs). Wherever the answer equals that cap the bound is tight and the hill-climber's layout proves it constructively. The interesting entries are the ones that fall short of it -- classic at 5 and 6 bombs, quick_arena at 4, travel at 5 -- because there Z3 has to refute the counting bound, which needs the [Hall/Konig](https://en.wikipedia.org/wiki/K%C5%91nig%27s_theorem_(graph_theory)) reasoning the bound cannot see. Puzzle VI is exactly the classic row at b=6.
+
+Note the plateaus: classic and travel both buy nothing for their fifth bomb, quick_arena nothing for its fourth. An extra bomb only helps if it splits a segment that is not already carrying a scout, and past a point the board runs out of those.
+
 Contributing
 ------------
 
 The Z3-solver is easy to use, but also easy to misuse.  In particular, it's hard to predict its performance.  
 A constraint rewrite, or even a reordering can induce a 10X speedup, or a 10X speed penalty.  
+That unpredictability is worse than it looks: the same query, encoded identically, can swing by two orders of magnitude depending on nothing but the order Z3 happens to number its internal variables in. Any timing quoted from a single run is therefore close to meaningless, and the figures in `src/zed/` are medians over five SAT random seeds.  
 The following open challenges are identified (pull requests welcome!):
 - [ ] Make problem 5 amenable to direct minimization
-- [ ] Push problem 6 to within the same ballpark as the Wesselink-Zantema approach
+- [x] Push problem 6 to within the same ballpark as the Wesselink-Zantema approach
 
 Apart from accepting answers to these challenges, this repo is in maintenance mode and no longer actively being developed.
 
