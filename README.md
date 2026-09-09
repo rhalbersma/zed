@@ -167,61 +167,11 @@ A `Board` is a width, a height, a set of lake squares, and a per-setup-area bomb
 | Quick Arena | 8x8 | c4-c5, f4-f5 | 8x3 = 24 | 24 | 4 | 4 or 3 |
 | Travel | 10x8 | c4-d5, g4-h5 | 10x3 = 30 | 30 | 5 | 4 |
 
-The setup area is always the full width of the board, below and above the lake ranks, and every variant fills it exactly -- which is how a set's army size can be read straight off its board. The first three geometries come from [tabula](https://github.com/rhalbersma/tabula); the travel board is derived here. `sweep.py` varies the bomb budget rather than fixing one, which is what the Quick Arena row needs: two different 24-piece armies are documented for a board of that size (below), and they disagree on the miner count.
+The setup area is always the full width of the board, below and above the lake ranks, and every variant fills it exactly -- which is how a set's army size can be read straight off its board. The first three geometries come from [tabula](https://github.com/rhalbersma/tabula); the travel board is derived here. `sweep.py` varies the bomb budget rather than fixing one, which is what the Quick Arena row needs: two different 24-piece armies are documented for a board of that size, and they disagree on the miner count.
 
-The travel set is the classic game with two ranks taken out of the middle and 1 captain, 2 lieutenants, 2 sergeants, 1 miner, 3 scouts and 1 bomb taken out of the army. Its 5 bombs to 4 miners preserves the classic 6-to-5 margin, which looks like a deliberate balance rule: even if every miner trades itself for a bomb, one bomb is left to wall in the flag. [L'Attaque](https://en.wikipedia.org/wiki/L%27Attaque), the 1908 game Stratego descends from, is the one variant that misses this by a bomb.
+The travel set is the classic game with two ranks taken out of the middle and 1 captain, 2 lieutenants, 2 sergeants, 1 miner, 3 scouts and 1 bomb taken out of the army.
 
-The same rule turns up in a 2018 thread on the (now defunct) Stratego.com forum, about a pocket set with three rows of eight, i.e. 24 pieces on an 8-wide board. Its army was 1 flag, 1 marshal, 2 colonels, 3 majors, 4 sergeants, 4 miners, 4 scouts, 1 spy and 4 bombs -- four miners against four bombs, one short again. The suggestion at the time was to spend one of those miners on a scout. An independently designed 24-piece variant, played on jijbent.nl and yourturnmyturn.com, turns out to do exactly that and one thing more: 1 flag, 1 marshal, 1 general, 2 colonels, 3 captains, 3 sergeants, 3 miners, 5 scouts, 1 spy and 4 bombs. Relative to the pocket set that is just two swaps -- one sergeant for the general, one miner for a scout -- since the three majors are the same three pieces under a different name. And it lands on 3 miners to 4 bombs, the margin the classic game keeps.
-
-So of the five armies here, only L'Attaque and that pocket set break the rule, and both break it in the same direction.
-
-Two structural tests need no reference army at all. A sensible force is a pyramid -- never fewer of a rank than of the rank above it -- and ideally leaves no gap in the ladder from marshal down to scout:
-
-    Classic 40    ladder complete   pyramid OK
-    L'Attaque 36  ladder complete   pyramid OK
-    Travel 30     ladder complete   pyramid breaks at lieutenant
-    pocket 24     gaps: general, captain, lieutenant       pyramid OK
-    jijbent 24    gaps: major, lieutenant                  pyramid OK
-
-Classic passes both, as does L'Attaque, whose defect lies outside the ladder. The travel set is the only army that breaks the pyramid, with 2 lieutenants under 3 captains. And the rank the pocket set is missing is the general -- which is what made its colonels overpowered, reached here by counting rather than by playing it.
-
-A third test says why that matters. Count each rank's *hunters*: the enemy pieces that can take it, meaning everything strictly above it, plus the spy in the marshal's case. A piece with a single hunter can only be lost to an ambush, since its one predator is the last thing it will ever attack.
-
-    Classic 40    marshal 1   general 1   colonel 2      one-hunter pieces: 2  (1 marshal, 1 general)
-    L'Attaque 36  marshal 1   general 1   colonel 2      one-hunter pieces: 2
-    Travel 30     marshal 1   general 1   colonel 2      one-hunter pieces: 2
-    jijbent 24    marshal 1   general 1   colonel 2      one-hunter pieces: 2
-    pocket 24     marshal 1   colonel 1 (x2)             one-hunter pieces: 3  (1 marshal, 2 colonels)
-
-Four of the five armies carry exactly two near-invulnerable pieces, and both are unique. The pocket set carries three, and two of them are the same piece: you can send one colonel hunting without risking the other, and the opponent cannot tell them apart. Losing a general is losing it; losing a colonel leaves a spare.
-
-That is what the sergeant-for-general swap really buys. It is not the gap in the ladder as such but a second hunter over the colonels, taking them from one to two and the army from three one-hunter pieces back to the usual two.
-
-The 24-piece gaps are a trade, not an oversight. With flag, spy and 4 bombs fixed, 18 pieces remain for 9 ranks, and the cheapest gapless pyramid is 1-1-2-2-2-2-2-3-3, which satisfies the margin rule but leaves only 3 scouts, 12.5% against the classic 20%. At that size a complete ladder and a healthy scout count cannot both be had. The jijbent army spends two cheap ranks, the major and the lieutenant, and buys 5 scouts at 20.8%; the pocket set spends three including the general and still ends up scout-poor at 16.7%, paying the price without collecting the benefit.
-
-
-Since the setup area is always filled exactly, an army's composition is also a set of densities: a bomb count is the fraction of your own setup area that is bombs. Measured that way the five armies line up against the classic ratio like this:
-
-    army                   bombs         miners         scouts
-    Classic 40         6   15.0%      5   12.5%      8   20.0%
-    L'Attaque 36       4   11.1%      4   11.1%      8   22.2%
-    Travel 30          5   16.7%      4   13.3%      5   16.7%
-    pocket 24          4   16.7%      4   16.7%      4   16.7%
-    jijbent 24         4   16.7%      3   12.5%      5   20.8%
-
-    deviation from the classic ratio, in pieces:
-      L'Attaque 36  bombs -1.4   miners -0.5   scouts +0.8
-      Travel 30     bombs +0.5   miners +0.2   scouts -1.0
-      pocket 24     bombs +0.4   miners +1.0   scouts -0.8
-      jijbent 24    bombs +0.4   miners +0.0   scouts +0.2
-
-The jijbent army is a faithful scale-down: within half a piece of the classic ratio on all three counts, and exactly on it for miners. The pocket set is not scaled at all but flat -- 4 sergeants, 4 miners, 4 scouts, 4 bombs -- which is why its three densities are identical, and it sits +1.0 miners and -0.8 scouts away from classic, the single piece the 2018 thread proposed moving. L'Attaque's -1.4 bombs is the largest deviation in the table, and its miners are not in surplus but half a piece short, so trading a miner for a scout would not repair it -- that leaves the bombs untouched and pushes both other counts further out (-1.5 miners, +1.8 scouts). The one swap that fixes all three is a scout for a bomb, giving 5 bombs, 4 miners and 7 scouts: -0.4, -0.5 and -0.2, with the margin rule satisfied. That is what removing 1 major, 1 miner, 1 bomb and 1 scout from classic gives, rather than the 1 major, 1 miner and 2 bombs actually removed. The travel set keeps the bomb margin but is a full scout short of the classic density. Against the whole ladder rather than these three counts, its 10 removed pieces all came out of the bottom and middle -- 2 lieutenants, 2 sergeants, 3 scouts -- leaving lieutenants, sergeants and scouts each a piece short and the majors in surplus at +0.75, where a proportional cut would have taken a major and a colonel as well. Trading a major for a scout puts the scouts exactly on the classic ratio, drops the majors to -0.25 and keeps the margin; bomb-for-scout and miner-for-scout also fix the scouts but break the margin. The lieutenant and sergeant deficits survive any single swap, because the travel army kept all nine ranks and thinned them unevenly. Merging the lieutenants and sergeants into one rank of 4 repairs that: with the major traded for a scout as well, the ladder becomes 1-1-2-2-3-4-4-6, which is a pyramid again, the scouts land exactly on the classic ratio, bombs and miners stay within half a piece and the margin rule holds. The merged rank carries 4 where classic's lieutenants and sergeants scale to 6, but that is a deliberate shortening rather than a dent in the middle, and it is the same trade the jijbent army makes.
-
-Which points at the underlying rule: shrink the army, shorten the ladder. Classic spreads 40 pieces over 9 ranks, the repaired travel army 30 over 8, the jijbent army 24 over 7 -- between 3.4 and 4.4 pieces per rank throughout. The published travel set kept 9 ranks it could not fill evenly; the pocket set cut to 6 when 7 was right, and cut the general.
-
-None of this is evidence that the classic army is well balanced, since it defines the yardstick and its zeros are true by construction. Three things that do not depend on it point the same way. The margin rule is structural rather than a ratio. The jijbent army was designed independently for a different board and landed within half a piece of classic on all three counts. And scout saturation -- the real scout count over the maximum number of mutually invisible scouts the board admits, which is puzzle VI's answer, a denominator classic has no say in -- puts classic at 8/24 = 33.3% and jijbent at 5/16 = 31.2%, against 40.0% for L'Attaque and 25.0% for both the pocket set and the travel set.
-
-The bomb margin was not the pocket set's only problem. Its rank ladder runs marshal, colonel, major, sergeant, miner, scout, spy -- no general, no captains, no lieutenants -- so a colonel loses to exactly one piece on the board, and the thread's verdict was that without a general the colonels are overpowered: find the marshal with one, and the rest of the game is patience. The jijbent variant inserts the general directly above the colonels, which is what stops marshal information from being decisive. Two flaws, two fixes, and the second one is invisible to a solver: the piece ladder is not something any of the puzzles here can see.
+The armies these boards carry turn out to be checkable in their own right -- bomb margins, piece densities, the shape of the rank ladder -- and one of those checks uses the sweep below. That analysis lives in [doc/armies.md](doc/armies.md), since it is about Stratego rather than about Z3.
 
 `src/sweep.py` asks puzzle VI's question of every board over a range of bomb budgets, and answers all 28 of them in about 20 seconds:
 
