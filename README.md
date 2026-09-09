@@ -175,6 +175,19 @@ The same rule turns up in a 2018 thread on the (now defunct) Stratego.com forum,
 
 So of the five armies here, only L'Attaque and that pocket set break the rule, and both break it in the same direction.
 
+Two structural tests need no reference army at all. A sensible force is a pyramid -- never fewer of a rank than of the rank above it -- and ideally leaves no gap in the ladder from marshal down to scout:
+
+    Classic 40    ladder complete   pyramid OK
+    L'Attaque 36  ladder complete   pyramid OK
+    Travel 30     ladder complete   pyramid breaks at lieutenant
+    pocket 24     gaps: general, captain, lieutenant       pyramid OK
+    jijbent 24    gaps: major, lieutenant                  pyramid OK
+
+Classic passes both, as does L'Attaque, whose defect lies outside the ladder. The travel set is the only army that breaks the pyramid, with 2 lieutenants under 3 captains. And the rank the pocket set is missing is the general -- which is what made its colonels overpowered, reached here by counting rather than by playing it.
+
+The 24-piece gaps are a trade, not an oversight. With flag, spy and 4 bombs fixed, 18 pieces remain for 9 ranks, and the cheapest gapless pyramid is 1-1-2-2-2-2-2-3-3, which satisfies the margin rule but leaves only 3 scouts, 12.5% against the classic 20%. At that size a complete ladder and a healthy scout count cannot both be had. The jijbent army spends two cheap ranks, the major and the lieutenant, and buys 5 scouts at 20.8%; the pocket set spends three including the general and still ends up scout-poor at 16.7%, paying the price without collecting the benefit.
+
+
 Since the setup area is always filled exactly, an army's composition is also a set of densities: a bomb count is the fraction of your own setup area that is bombs. Measured that way the five armies line up against the classic ratio like this:
 
     army                   bombs         miners         scouts
