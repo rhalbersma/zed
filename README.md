@@ -164,12 +164,16 @@ A `Board` is a width, a height, a set of lake squares, and a per-setup-area bomb
 |---|---|---|---|---|---|---|
 | Classic | 10x10 | c5-d6, g5-h6 | 10x4 = 40 | 40 | 6 | 5 |
 | L'Attaque | 9x10 | c5, e5, g5, c6, e6, g6 | 9x4 = 36 | 36 | 4 | 4 |
-| Quick Arena | 8x8 | c4-c5, f4-f5 | 8x3 = 24 | 24 | ? | ? |
+| Quick Arena | 8x8 | c4-c5, f4-f5 | 8x3 = 24 | 24 | 4 | 4 or 3 |
 | Travel | 10x8 | c4-d5, g4-h5 | 10x3 = 30 | 30 | 5 | 4 |
 
-The setup area is always the full width of the board, below and above the lake ranks, and every variant fills it exactly -- which is how the travel set's army size can be read straight off its board. The first three geometries come from [tabula](https://github.com/rhalbersma/tabula); the travel board is derived here. Quick Arena's bomb and miner counts are not recorded there, so `sweep.py` varies the budget instead of assuming one.
+The setup area is always the full width of the board, below and above the lake ranks, and every variant fills it exactly -- which is how a set's army size can be read straight off its board. The first three geometries come from [tabula](https://github.com/rhalbersma/tabula); the travel board is derived here. `sweep.py` varies the bomb budget rather than fixing one, which is what the Quick Arena row needs: two different 24-piece armies are documented for a board of that size (below), and they disagree on the miner count.
 
 The travel set is the classic game with two ranks taken out of the middle and 1 captain, 2 lieutenants, 2 sergeants, 1 miner, 3 scouts and 1 bomb taken out of the army. Its 5 bombs to 4 miners preserves the classic 6-to-5 margin, which looks like a deliberate balance rule: even if every miner trades itself for a bomb, one bomb is left to wall in the flag. [L'Attaque](https://en.wikipedia.org/wiki/L%27Attaque), the 1908 game Stratego descends from, is the one variant that misses this by a bomb.
+
+The same rule turns up in a 2018 thread on the (now defunct) Stratego.com forum, about a pocket set with three rows of eight, i.e. 24 pieces on an 8-wide board. Its army was 1 flag, 1 marshal, 2 colonels, 3 majors, 4 sergeants, 4 miners, 4 scouts, 1 spy and 4 bombs -- four miners against four bombs, one short again. The suggestion at the time was to spend one of those miners on a scout. An independently designed 24-piece variant, played on jijbent.nl and yourturnmyturn.com, turns out to do exactly that and one thing more: 1 flag, 1 marshal, 1 general, 2 colonels, 3 captains, 3 sergeants, 3 miners, 5 scouts, 1 spy and 4 bombs. Relative to the pocket set that is just two swaps -- one sergeant for the general, one miner for a scout -- since the three majors are the same three pieces under a different name. And it lands on 3 miners to 4 bombs, the margin the classic game keeps.
+
+So of the five armies here, only L'Attaque and that pocket set break the rule, and both break it in the same direction.
 
 `src/sweep.py` asks puzzle VI's question of every board over a range of bomb budgets, and answers all 28 of them in about 20 seconds:
 

@@ -44,8 +44,14 @@ SETUP = Board(10, 4, frozenset(), ((span(0, 0, 9, 3), 40),))
 
 # Bombs per setup area; the areas themselves are derived from the lake ranks.
 # Classic has 6 bombs and 5 miners, travel 5 and 4: one spare bomb, so that a
-# miner trading itself for each bomb still leaves the flag walled in.  (L'Attaque
-# has 4 of each, which is one bomb short of that.)
+# miner trading itself for each bomb still leaves the flag walled in.
+#
+# The rule holds across variants.  L'Attaque has 4 of each, one bomb short.  So
+# does a 24-piece pocket set (three rows of eight, 4 bombs and 4 miners), while
+# the 24-piece variant played on jijbent.nl -- one sergeant traded for a general
+# and one miner for a scout, the majors merely renamed captains -- lands back on
+# 3 miners to 4 bombs.  Quick Arena's
+# own army is not recorded in tabula, which is why sweep.py varies the budget.
 CLASSIC_BOMBS = with_setup(CLASSIC, 6)
 TRAVEL_BOMBS  = with_setup(TRAVEL, 5)
 
