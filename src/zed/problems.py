@@ -33,11 +33,21 @@ L_ATTAQUE   = Board(9, 10, lakes("c6", "e6", "g6", "c5", "e5", "g5"))
 CLASSIC     = Board(10, 10, lakes("c6", "d6", "g6", "h6", "c5", "d5", "g5", "h5"))
 QUICK_ARENA = Board(8, 8, lakes("c5", "f5", "c4", "f4"))
 
+# The 10x8 travel set: the classic board with two ranks taken out of the middle,
+# and the two 2x2 lakes moved down with them.  Its army drops 1 captain, 2
+# lieutenants, 2 sergeants, 1 miner, 3 scouts and 1 bomb from the classic 40, so
+# 30 pieces fill a 10x3 setup area exactly, the way 40 fill the classic 10x4.
+TRAVEL      = Board(10, 8, lakes("c5", "d5", "g5", "h5", "c4", "d4", "g4", "h4"))
+
 # Puzzles I and II are played on one setup area alone, where bombs may go anywhere.
 SETUP = Board(10, 4, frozenset(), ((span(0, 0, 9, 3), 40),))
 
-# Classic Stratego with 6 bombs per setup area; the areas are derived from the lakes.
+# Bombs per setup area; the areas themselves are derived from the lake ranks.
+# Classic has 6 bombs and 5 miners, travel 5 and 4: one spare bomb, so that a
+# miner trading itself for each bomb still leaves the flag walled in.  (L'Attaque
+# has 4 of each, which is one bomb short of that.)
 CLASSIC_BOMBS = with_setup(CLASSIC, 6)
+TRAVEL_BOMBS  = with_setup(TRAVEL, 5)
 
 CATALOG = [
     Problem("I   min bombs, 2x3 + 3x2",   SETUP, "bomb_rect_cover", "min",
