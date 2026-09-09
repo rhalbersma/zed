@@ -175,6 +175,23 @@ The same rule turns up in a 2018 thread on the (now defunct) Stratego.com forum,
 
 So of the five armies here, only L'Attaque and that pocket set break the rule, and both break it in the same direction.
 
+Since the setup area is always filled exactly, an army's composition is also a set of densities: a bomb count is the fraction of your own setup area that is bombs. Measured that way the five armies line up against the classic ratio like this:
+
+    army                   bombs         miners         scouts
+    Classic 40         6   15.0%      5   12.5%      8   20.0%
+    L'Attaque 36       4   11.1%      4   11.1%      8   22.2%
+    Travel 30          5   16.7%      4   13.3%      5   16.7%
+    pocket 24          4   16.7%      4   16.7%      4   16.7%
+    jijbent 24         4   16.7%      3   12.5%      5   20.8%
+
+    deviation from the classic ratio, in pieces:
+      L'Attaque 36  bombs -1.4   miners -0.5   scouts +0.8
+      Travel 30     bombs +0.5   miners +0.2   scouts -1.0
+      pocket 24     bombs +0.4   miners +1.0   scouts -0.8
+      jijbent 24    bombs +0.4   miners +0.0   scouts +0.2
+
+The jijbent army is a faithful scale-down: within half a piece of the classic ratio on all three counts, and exactly on it for miners. The pocket set is not scaled at all but flat -- 4 sergeants, 4 miners, 4 scouts, 4 bombs -- which is why its three densities are identical, and it sits +1.0 miners and -0.8 scouts away from classic, the single piece the 2018 thread proposed moving. L'Attaque's -1.4 bombs is the largest deviation in the table. The travel set keeps the bomb margin but is a full scout short of the classic density, the only one of its three counts that is off.
+
 The bomb margin was not the pocket set's only problem. Its rank ladder runs marshal, colonel, major, sergeant, miner, scout, spy -- no general, no captains, no lieutenants -- so a colonel loses to exactly one piece on the board, and the thread's verdict was that without a general the colonels are overpowered: find the marshal with one, and the rest of the game is patience. The jijbent variant inserts the general directly above the colonels, which is what stops marshal information from being decisive. Two flaws, two fixes, and the second one is invisible to a solver: the piece ladder is not something any of the puzzles here can see.
 
 `src/sweep.py` asks puzzle VI's question of every board over a range of bomb budgets, and answers all 28 of them in about 20 seconds:
