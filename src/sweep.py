@@ -35,21 +35,22 @@ def main(argv):
     prefix = next((a for a in argv[1:] if not a.startswith("-") and not a.isdigit()), None)
     boards = [(n, b) for n, b in BOARDS if not prefix or n.startswith(prefix)]
 
-    print("max independent scouts vs bombs per setup area\n")
-    print("board        " + "".join("%5s" % ("b=%d" % b) for b in budgets) + "   cap")
+    print("max independent scouts vs bombs per setup area")
+    print("a value in (parentheses) is short of the counting cap for that budget\n")
+    print("board        " + "".join("%7s" % ("b=%d" % b) for b in budgets))
     for name, base in boards:
-        row, cap = [], None
+        row = []
         for b in budgets:
             board = with_setup(base, b)
             cap = counting_cap(board)
             t = time.time()
             result = solve.solve(Problem(name, board, "independent", "max"),
                                  verbose=False)
-            row.append((result["optimum"], time.time() - t))
+            row.append((result["optimum"], cap, time.time() - t))
         print("%-12s " % name
-              + "".join("%5d" % n for n, _ in row)
-              + "   %d" % cap
-              + "   (%.1fs)" % sum(dt for _, dt in row))
+              + "".join("%7s" % (str(n) if n == cap else "(%d)" % n)
+                        for n, cap, _ in row)
+              + "   (%.1fs)" % sum(dt for _, _, dt in row))
     return 0
 
 

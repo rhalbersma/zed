@@ -174,16 +174,17 @@ The travel set is the classic game with two ranks taken out of the middle and 1 
 `src/sweep.py` asks puzzle VI's question of every board over a range of bomb budgets, and answers all 28 of them in about 20 seconds:
 
     max independent scouts vs bombs per setup area
+    a value in (parentheses) is short of the counting cap for that budget
 
-    board          b=0  b=1  b=2  b=3  b=4  b=5  b=6   cap
-    l_attaque       12   14   16   18   20   22   24   24
-    classic         14   16   18   20   22   22   24   26
-    quick_arena     10   12   14   16   16   18   20   22
-    travel          12   14   16   18   20   20   22   24
+    board            b=0    b=1    b=2    b=3    b=4    b=5    b=6
+    l_attaque         12     14     16     18     20     22     24
+    classic           14     16     18     20     22   (22)   (24)
+    quick_arena       10     12     14     16   (16)   (18)   (20)
+    travel            12     14     16     18     20   (20)   (22)
 
-Most entries are settled by a counting bound alone: a bomb splits at most one segment per orientation, so it buys at most one extra scout, capping the answer at (number of segments + bombs). Wherever the answer equals that cap the bound is tight and the hill-climber's layout proves it constructively. The interesting entries are the ones that fall short of it -- classic at 5 and 6 bombs, quick_arena at 4, travel at 5 -- because there Z3 has to refute the counting bound, which needs the [Hall/Konig](https://en.wikipedia.org/wiki/K%C5%91nig%27s_theorem_(graph_theory)) reasoning the bound cannot see. Puzzle VI is exactly the classic row at b=6.
+Most entries are settled by a counting bound alone: a bomb splits at most one segment per orientation, so it buys at most one extra scout, capping the answer at (number of segments + bombs). Wherever the answer equals that cap the bound is tight and the hill-climber's layout proves it constructively. The seven parenthesised entries are the interesting ones, because there Z3 has to refute the counting bound, which needs the [Hall/Konig](https://en.wikipedia.org/wiki/K%C5%91nig%27s_theorem_(graph_theory)) reasoning the bound cannot see. Puzzle VI is exactly the classic row at b=6. L'Attaque is the one board where the bound is tight at every budget.
 
-Note the plateaus: classic and travel both buy nothing for their fifth bomb, quick_arena nothing for its fourth. An extra bomb only helps if it splits a segment that is not already carrying a scout, and past a point the board runs out of those.
+Note the plateaus: classic and travel both buy nothing for their fifth bomb, quick_arena nothing for its fourth. An extra bomb only helps if it splits a segment that is not already carrying a scout, and past a point the board runs out of those -- which is exactly when the counting cap stops being reachable.
 
 Contributing
 ------------
