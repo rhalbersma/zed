@@ -185,6 +185,18 @@ Two structural tests need no reference army at all. A sensible force is a pyrami
 
 Classic passes both, as does L'Attaque, whose defect lies outside the ladder. The travel set is the only army that breaks the pyramid, with 2 lieutenants under 3 captains. And the rank the pocket set is missing is the general -- which is what made its colonels overpowered, reached here by counting rather than by playing it.
 
+A third test says why that matters. Count each rank's *hunters*: the enemy pieces that can take it, meaning everything strictly above it, plus the spy in the marshal's case. A piece with a single hunter can only be lost to an ambush, since its one predator is the last thing it will ever attack.
+
+    Classic 40    marshal 1   general 1   colonel 2      one-hunter pieces: 2  (1 marshal, 1 general)
+    L'Attaque 36  marshal 1   general 1   colonel 2      one-hunter pieces: 2
+    Travel 30     marshal 1   general 1   colonel 2      one-hunter pieces: 2
+    jijbent 24    marshal 1   general 1   colonel 2      one-hunter pieces: 2
+    pocket 24     marshal 1   colonel 1 (x2)             one-hunter pieces: 3  (1 marshal, 2 colonels)
+
+Four of the five armies carry exactly two near-invulnerable pieces, and both are unique. The pocket set carries three, and two of them are the same piece: you can send one colonel hunting without risking the other, and the opponent cannot tell them apart. Losing a general is losing it; losing a colonel leaves a spare.
+
+That is what the sergeant-for-general swap really buys. It is not the gap in the ladder as such but a second hunter over the colonels, taking them from one to two and the army from three one-hunter pieces back to the usual two.
+
 The 24-piece gaps are a trade, not an oversight. With flag, spy and 4 bombs fixed, 18 pieces remain for 9 ranks, and the cheapest gapless pyramid is 1-1-2-2-2-2-2-3-3, which satisfies the margin rule but leaves only 3 scouts, 12.5% against the classic 20%. At that size a complete ladder and a healthy scout count cannot both be had. The jijbent army spends two cheap ranks, the major and the lieutenant, and buys 5 scouts at 20.8%; the pocket set spends three including the general and still ends up scout-poor at 16.7%, paying the price without collecting the benefit.
 
 
