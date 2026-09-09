@@ -81,15 +81,15 @@ def U_scout_moves_from(r, c):
     else:
         return range(0)
 
-scout_moves_from = np.array([
-    list(chain(
+scout_moves_from = {
+    (r, c): list(chain(
         zip(repeat(r), L_scout_moves_from(r, c)),
         zip(repeat(r), R_scout_moves_from(r, c)),
         zip(D_scout_moves_from(r, c), repeat(c)),
         zip(U_scout_moves_from(r, c), repeat(c))
     ))
     for (r, c) in board()
-]).reshape(H, W)
+}
 
 each_square_occupied_or_threatened_by_scout = [
     Or(
