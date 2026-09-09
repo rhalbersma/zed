@@ -7,7 +7,7 @@
 
 from itertools import chain, product, repeat
 import numpy as np
-from z3 import Bool, Implies, Not, PbEq, PbLe, sat, Solver
+from z3 import Bool, Implies, Not, PbEq, PbLe, sat, SolverFor
 
 # Stratego board
 H, W =  10, 10
@@ -96,15 +96,15 @@ def U_scout_moves_from(r, c):
     else:
         return range(0)
 
-scout_moves_from = np.array([
-    list(chain(
+scout_moves_from = {
+    (r, c): list(chain(
         zip(repeat(r), L_scout_moves_from(r, c)),
         zip(repeat(r), R_scout_moves_from(r, c)),
         zip(D_scout_moves_from(r, c), repeat(c)),
         zip(U_scout_moves_from(r, c), repeat(c))
     ))
     for (r, c) in board()
-]).reshape(H, W)
+}
 
 scouts_threaten_exactly_one_other_scout = [
     Implies(
@@ -117,8 +117,11 @@ scouts_threaten_exactly_one_other_scout = [
     for (r, c) in board() if (r, c) not in lakes()
 ]
 
-# Clauses (Optimize() takes too long on this problem, Solver() will proof max_scouts = 18 instantly, and disproof max_scouts = 20 within a minute)
-s = Solver()
+# Clauses. Optimize() cannot do this problem at all, and cannot be pinned to
+# QF_FD.  SolverFor('QF_FD') routes the Pb* constraints to the SAT core, where
+# they belong; the default Solver() sends them to the SMT core's Pb theory and
+# the N = 20 refutation no longer finishes.
+s = SolverFor('QF_FD')
 s.add(no_scouts_in_lakes)
 s.add(at_most_two_scouts_per_segment)
 s.add(scouts_threaten_exactly_one_other_scout)

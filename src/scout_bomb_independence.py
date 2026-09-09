@@ -7,7 +7,7 @@
 
 from itertools import chain, product, repeat
 import numpy as np
-from z3 import And, Bool, If, Implies, Not, Or, PbEq, PbLe, sat, Solver, Sum
+from z3 import And, Bool, If, Implies, Not, Or, PbEq, PbLe, sat, SolverFor, Sum
 
 # Stratego board
 H, W =  10, 10
@@ -116,25 +116,25 @@ def U_scout_moves_from(r, c):
     else:
         return range(0)
 
-L_scout_moves_cols = np.array([
-    L_scout_moves_from(r, c)
+L_scout_moves_cols = {
+    (r, c): L_scout_moves_from(r, c)
     for (r, c) in board()
-]).reshape(H, W)
+}
 
-R_scout_moves_cols = np.array([
-    R_scout_moves_from(r, c)
+R_scout_moves_cols = {
+    (r, c): R_scout_moves_from(r, c)
     for (r, c) in board()
-]).reshape(H, W)
+}
 
-D_scout_moves_rows = np.array([
-    D_scout_moves_from(r, c)
+D_scout_moves_rows = {
+    (r, c): D_scout_moves_from(r, c)
     for (r, c) in board()
-]).reshape(H, W)
+}
 
-U_scout_moves_rows = np.array([
-    U_scout_moves_from(r, c)
+U_scout_moves_rows = {
+    (r, c): U_scout_moves_from(r, c)
     for (r, c) in board()
-]).reshape(H, W)
+}
 
 def squares_in_between(b, e):
     return range(b + 1, e)
@@ -188,8 +188,9 @@ no_scout_threatens_another_scout = [
     for (r, c) in board() if (r, c) not in lakes()
 ]
 
-# Clauses
-s = Solver()
+# Clauses.  SolverFor('QF_FD') rather than Solver(): see scout_cover.py.
+# On z3 5.1 this is the difference between seconds and not finishing.
+s = SolverFor('QF_FD')
 s.add(no_scouts_and_bombs_on_same_square)
 s.add(no_scouts_or_bombs_in_lakes)
 s.add(no_bombs_in_dmz)

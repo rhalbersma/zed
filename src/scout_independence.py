@@ -7,7 +7,7 @@
 
 from itertools import chain, product, repeat
 import numpy as np
-from z3 import And, Bool, If, Implies, Not, PbEq, PbLe, Optimize, sat, Sum
+from z3 import And, Bool, If, Implies, Not, PbLe, Optimize, sat, Sum
 
 # Stratego board
 H, W =  10, 10
@@ -45,9 +45,8 @@ lake_rows = [ list(zip(repeat(r), range(c, c + 2))) for r in range(4, 6) for c i
 lake_cols = [ list(zip(range(r, r + 4), repeat(c))) for r in (0, 6) for c in chain(range(2, 4), range(6, 8)) ]
 segments = open_rows + open_cols + lake_rows + lake_cols
 
-# TODO: incorporate the fixed issue https://github.com/Z3Prover/z3/issues/1782 as soon as there is a new release available
 at_most_one_scout_per_segment = [
-    PbEq([
+    PbLe([
         (is_scout[r][c], 1)
         for (r, c) in s
     ], 1)
@@ -99,15 +98,15 @@ def U_scout_moves_from(r, c):
     else:
         return range(0)
 
-scout_moves_from = np.array([
-    list(chain(
+scout_moves_from = {
+    (r, c): list(chain(
         zip(repeat(r), L_scout_moves_from(r, c)),
         zip(repeat(r), R_scout_moves_from(r, c)),
         zip(D_scout_moves_from(r, c), repeat(c)),
         zip(U_scout_moves_from(r, c), repeat(c))
     ))
     for (r, c) in board()
-]).reshape(H, W)
+}
 
 no_scout_threatens_another_scout = [
     Implies(
@@ -131,7 +130,7 @@ num_scouts = Sum([ If(is_scout[r][c], 1, 0) for (r, c) in board() ])
 max_scouts = s.maximize(num_scouts)
 
 if s.check() == sat:
-    #assert s.upper(max_scouts) == 14
+    assert s.upper(max_scouts) == 14
     print("The maximum number of scouts satisfying the constraints == %s." % s.upper(max_scouts))
     print(diagram(s.model()))
 else:
