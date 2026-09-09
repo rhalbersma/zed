@@ -175,6 +175,8 @@ The same rule turns up in a 2018 thread on the (now defunct) Stratego.com forum,
 
 So of the five armies here, only L'Attaque and that pocket set break the rule, and both break it in the same direction.
 
+The bomb margin was not the pocket set's only problem. Its rank ladder runs marshal, colonel, major, sergeant, miner, scout, spy -- no general, no captains, no lieutenants -- so a colonel loses to exactly one piece on the board, and the thread's verdict was that without a general the colonels are overpowered: find the marshal with one, and the rest of the game is patience. The jijbent variant inserts the general directly above the colonels, which is what stops marshal information from being decisive. Two flaws, two fixes, and the second one is invisible to a solver: the piece ladder is not something any of the puzzles here can see.
+
 `src/sweep.py` asks puzzle VI's question of every board over a range of bomb budgets, and answers all 28 of them in about 20 seconds:
 
     max independent scouts vs bombs per setup area
